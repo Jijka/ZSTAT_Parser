@@ -1,6 +1,6 @@
 # profile_zstat_log_parser
 
-Profile_zstat_log_parser используется на проекте Profile компании ВТБ24
+Profile_zstat_log_parser используется на проекте ВТБ24 Profile
 
 ## Installation
 
