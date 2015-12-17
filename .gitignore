@@ -1,0 +1,6 @@
+/Logs/*.*
+/Output/*.*
+/bin/Output
+/build
+/dist
+/*.spec
