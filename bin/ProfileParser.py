@@ -10,11 +10,8 @@ def main(argv):
     print('Script Path ', str(argv[1]))
     log_file_path = str(argv[1])
     log_file = LogFile.LogFile(log_file_path)
-    log_file.Parse()
+    log_file.parse()
 
 
 if __name__ == '__main__':
-    # try:
     main(sys.argv)
-    # except:
-    #   print("Sorry:", sys.exc_info(), ":", sys.exc_value)

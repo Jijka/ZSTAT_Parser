@@ -12,13 +12,12 @@ class LogFile(object):
         self.separator = separator
         self.newline = "\n"
         self.datetime_from = datetime(1840, 12, 31, 0, 0, 0)
-        # self.time_from = time.time() (1,1,0,0,0)
         self.output_dir = './Output/'
         if not (os.path.exists(self.output_dir)):
             os.mkdir(self.output_dir)
 
     def writer(self, lines, output_file, read_file_name):
-        print('Поток запущен ' + output_file)
+        print('Запись файла для ' + output_file)
         with open(self.output_dir + read_file_name + '_' + output_file + '.out', 'w') as file:
             for line in lines:
                 file.write(line)
@@ -67,45 +66,19 @@ class LogFile(object):
         l.append(split_line[9])
         return self.separator.join(l)
 
-    def Parse(self):
-        # self.__Open()
-        # t1 = time.time()
-        # split_lines = [x.split('\t') for x in self.file]
-
-        # t2 = time.time()
-        # OPS = map(lambda x: self.__OPS_Row_Builder(x), filter(lambda x: len(x) > 9, split_lines))
-        # for line in OPS:
-        #    self.File_Output_Ops.write(line)
-        # print('OPS: ', time.time() - t2)
-
-        # t3 = time.time()
-        # ISO = map(lambda x: self.__ISO8583_Row_Builder(x), filter(lambda x:'ISO8583' in x, split_lines))
-        # for line in ISO:
-        #    self.File_Output_ISO.write(line)
-        # print('ISO: ',time.time() - t3)
-
-        # print('ALL: ',time.time() - t1)
+    def parse(self):
         time1 = time.time()
         with open(self.log_file_path, 'r') as read_file:
-            split_lines = [x.split('\t') for x in read_file if x.count('\t') > 6]
-            split_lines_ops = (self.__OPS_Row_Builder(line) for line in split_lines if not ('ISO8583' in line))
-            split_lines_iso = (self.__ISO8583_Row_Builder(line) for line in split_lines if 'ISO8583' in line)
-
-            # for split_line in split_lines_OPS:
-            # ops_file.write(self.__OPS_Row_Builder(split_line))
-            # with open(self.output_dir + os.path.basename(read_file.name) + '_ISO.out', 'w') as iso_file:
-            #    for split_line in split_lines_ISO:
-            #        iso_file.write(self.__ISO8583_Row_Builder(split_line))
-
-
-            # with open(self.output_dir + os.path.basename(read_file.name) + '_ISO.out', 'w') as iso_file:
-            #    with open(self.output_dir + os.path.basename(read_file.name) + '_OPS.out', 'w') as ops_file:
-            #        split_lines_ISO = [iso_file.write(self.__ISO8583_Row_Builder(line)) if 'ISO8583' in line else ops_file.write(self.__OPS_Row_Builder(line)) for line in split_lines]
-            # init threads
-            t1 = threading.Thread(target=self.writer,
-                                  args=(split_lines_ops, 'OPS', os.path.basename(read_file.name)))
-            t2 = threading.Thread(target=self.writer,
-                                  args=(split_lines_iso, 'ISO', os.path.basename(read_file.name)))
+            # split_lines = [x.split('\t') for x in read_file if x.count('\t') > 6]
+            split_lines_ops = [self.__OPS_Row_Builder(line.split('\t')) for line in read_file if
+                               not ('ISO8583' in line) and line.count('\t') > 6]
+            split_lines_iso = [self.__ISO8583_Row_Builder(line.split('\t')) for line in read_file if
+                               'ISO8583' in line and line.count('\t') > 6]
+        # init threads
+        t1 = threading.Thread(target=self.writer,
+                              args=(split_lines_ops, 'OPS', os.path.basename(read_file.name)))
+        t2 = threading.Thread(target=self.writer,
+                              args=(split_lines_iso, 'ISO', os.path.basename(read_file.name)))
         # start threads
         t1.start()
         t2.start()
