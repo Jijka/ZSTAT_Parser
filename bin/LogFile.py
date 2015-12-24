@@ -1,8 +1,7 @@
-import os
-import threading
-import time
 from datetime import *
-
+import time
+import threading
+import os
 from tqdm import tqdm
 
 __author__ = 'i.akhaltsev'
