@@ -42,14 +42,14 @@ class LogFile(object):
         return open(self.output_dir + name, 'w')
 
     def decode_date(self, date_time):
-        split_datetime = date_time.split(',')
-        if len(split_datetime) < 2:
-            d = int(date_time[0:5])
-            t = int(date_time[5:10])
-        else:
+        if ',' in date_time:
+            split_datetime = date_time.split(',')
             d = int(split_datetime[0])
             t = int(split_datetime[1])
-        return str(self.datetime_from + timedelta(days=int(d), seconds=int(t)))
+        else:
+            d = int(date_time[0:5])
+            t = int(date_time[5:10])
+        return str(self.datetime_from + timedelta(days=d, seconds=t))
 
     def __ISO8583_Row_Builder(self, split_line):
         l = [self.decode_date(split_line[5]), split_line[4], split_line[6], split_line[8]]
@@ -62,10 +62,17 @@ class LogFile(object):
     def parse(self):
         time1 = time.time()
         with open(self.log_file_path, 'r') as read_file:
-            split_lines_ops = [self.__OPS_Row_Builder(line.split('\t')) for line in tqdm(read_file) if
-                               not ('ISO8583' in line) and line.count('\t') > 6]
-            split_lines_iso = [self.__ISO8583_Row_Builder(line.split('\t')) for line in tqdm(read_file) if
-                               'ISO8583' in line and line.count('\t') > 6]
+            split_lines_ops = []
+            split_lines_iso = []
+            for line in tqdm(read_file):
+                if line.count('\t') < 7:
+                    continue
+                split_line = line.split('\t')
+                if 'ISO8583' in split_line:
+                    split_lines_iso.append(self.__ISO8583_Row_Builder(split_line))
+                else:
+                    split_lines_ops.append(self.__OPS_Row_Builder(split_line))
+        time2 = time.time()
         # init threads
         t1 = threading.Thread(target=self.writer,
                               args=(split_lines_ops, 'OPS', os.path.basename(read_file.name)))
@@ -78,6 +85,8 @@ class LogFile(object):
         # join threads to the main thread
         t1.join()
         t2.join()
-
-        print('ALL: ', time.time() - time1)
+        end = time.time()
+        print('Parsing: ', time2 - time1)
+        print('Writing: ', end - time2)
+        print('ALL: ', end - time1)
         print('Парсинг успешно завершен!')

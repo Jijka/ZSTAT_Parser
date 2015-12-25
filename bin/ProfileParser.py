@@ -1,6 +1,5 @@
 import sys
 import LogFile
-
 __author__ = 'i.akhaltsev'
 
 
